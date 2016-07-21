@@ -225,11 +225,12 @@ class ReloadableViewLayoutAdapterTests: XCTestCase {
     }
 
     private func verifySectionZero(view: TestableReloadableView) {
+        let itemWidth = 320 - view.itemWidthInset
         view.verifyHeader(section: 0, text: "header 0", frame: CGRect(x: 0, y: 0, width: 320, height: 51), line: #line)
-        view.verifyVisibleItem(text: "item 0", frame: CGRect(x: 0, y: 51, width: 320, height: 52), line: #line)
-        view.verifyVisibleItem(text: "item 1", frame: CGRect(x: 0, y: 103, width: 320, height: 53), line: #line)
-        view.verifyVisibleItem(text: "item 2", frame: CGRect(x: 0, y: 156, width: 320, height: 54), line: #line)
-        view.verifyFooter(section: 0, text: "footer 0", frame: CGRect(x: 0, y: 210, width: 320, height: 55), line: #line)
+        view.verifyVisibleItem(text: "item 0", frame: CGRect(x: 0, y: 51 + view.itemSpacing, width: itemWidth, height: 52), line: #line)
+        view.verifyVisibleItem(text: "item 1", frame: CGRect(x: 0, y: 103 + 2*view.itemSpacing, width: itemWidth, height: 53), line: #line)
+        view.verifyVisibleItem(text: "item 2", frame: CGRect(x: 0, y: 156 + 3*view.itemSpacing, width: itemWidth, height: 54), line: #line)
+        view.verifyFooter(section: 0, text: "footer 0", frame: CGRect(x: 0, y: 210 + 4*view.itemSpacing, width: 320, height: 55), line: #line)
     }
 
     private func verifyLayoutOne(view view: TestableReloadableView) {
@@ -237,29 +238,30 @@ class ReloadableViewLayoutAdapterTests: XCTestCase {
         verifySectionZero(view)
 
         // Section 1
+        let itemWidth = 320 - view.itemWidthInset
         view.verifyHeader(section: 1, text: nil, frame: nil, line: #line)
-        view.verifyVisibleItem(text: "item 3", frame: CGRect(x: 0, y: 265, width: 320, height: 56), line: #line)
-        view.verifyVisibleItem(text: "item 4", frame: CGRect(x: 0, y: 321, width: 320, height: 57), line: #line)
+        view.verifyVisibleItem(text: "item 3", frame: CGRect(x: 0, y: 265 + 5*view.itemSpacing, width: itemWidth, height: 56), line: #line)
+        view.verifyVisibleItem(text: "item 4", frame: CGRect(x: 0, y: 321 + 6*view.itemSpacing, width: itemWidth, height: 57), line: #line)
         view.verifyFooter(section: 1, text: nil, frame: nil, line: #line)
     }
 
     private func verifyLayoutTwo(view view: TestableReloadableView) {
-
+        let itemWidth = 320 - view.itemWidthInset
         verifySectionZero(view)
 
         // Section 1
         view.verifyHeader(section: 1, text: nil, frame: nil, line: #line)
-        view.verifyVisibleItem(text: "item 3", frame: CGRect(x: 0, y: 265, width: 320, height: 56), line: #line)
-        view.verifyVisibleItem(text: "item 4", frame: CGRect(x: 0, y: 321, width: 320, height: 57), line: #line)
-        view.verifyVisibleItem(text: "item 5", frame: CGRect(x: 0, y: 378, width: 320, height: 58), line: #line)
+        view.verifyVisibleItem(text: "item 3", frame: CGRect(x: 0, y: 265 + 5*view.itemSpacing, width: itemWidth, height: 56), line: #line)
+        view.verifyVisibleItem(text: "item 4", frame: CGRect(x: 0, y: 321 + 6*view.itemSpacing, width: itemWidth, height: 57), line: #line)
+        view.verifyVisibleItem(text: "item 5", frame: CGRect(x: 0, y: 378 + 7*view.itemSpacing, width: itemWidth, height: 58), line: #line)
         view.verifyFooter(section: 1, text: nil, frame: nil, line: #line)
 
         // Section 2
-        view.verifyHeader(section: 2, text: "header 2", frame: CGRect(x: 0, y: 436, width: 320, height: 59), line: #line)
-        view.verifyVisibleItem(text: "item 6", frame: CGRect(x: 0, y: 495, width: 320, height: 60), line: #line)
-        view.verifyVisibleItem(text: "item 7", frame: CGRect(x: 0, y: 555, width: 320, height: 61), line: #line)
-        view.verifyVisibleItem(text: "item 8", frame: CGRect(x: 0, y: 616, width: 320, height: 62), line: #line)
-        view.verifyFooter(section: 2, text: "footer 2", frame: CGRect(x: 0, y: 678, width: 320, height: 63), line: #line)
+        view.verifyHeader(section: 2, text: "header 2", frame: CGRect(x: 0, y: 436 + 8*view.itemSpacing, width: 320, height: 59), line: #line)
+        view.verifyVisibleItem(text: "item 6", frame: CGRect(x: 0, y: 495 + 9*view.itemSpacing, width: itemWidth, height: 60), line: #line)
+        view.verifyVisibleItem(text: "item 7", frame: CGRect(x: 0, y: 555 + 10*view.itemSpacing, width: itemWidth, height: 61), line: #line)
+        view.verifyVisibleItem(text: "item 8", frame: CGRect(x: 0, y: 616 + 11*view.itemSpacing, width: itemWidth, height: 62), line: #line)
+        view.verifyFooter(section: 2, text: "footer 2", frame: CGRect(x: 0, y: 678 + 12*view.itemSpacing, width: 320, height: 63), line: #line)
     }
 
     private func layoutProviderOne() -> [Section<[Layout]>] {
@@ -339,13 +341,13 @@ private class TestLabelLayout: SizeLayout<UILabel> {
 protocol TestableReloadableView: ReloadableView {
 
     var layoutAdapter: ReloadableViewLayoutAdapter { get }
-
+    var itemSpacing: CGFloat { get }
+    var itemWidthInset: CGFloat { get }
     var reloadDataCount: Int { get }
     var insertedIndexPaths: [[NSIndexPath]] { get }
     var insertedSections: [NSIndexSet] { get }
 
     func resetTestCounts()
-
     func verifyHeader(section section: Int, text: String?, frame: CGRect?, line: UInt)
     func verifyFooter(section section: Int, text: String?, frame: CGRect?, line: UInt)
     func verifyVisibleItem(text text: String, frame: CGRect, line: UInt)
@@ -355,6 +357,16 @@ private class TestTableView: LayoutAdapterTableView, TestableReloadableView {
     var reloadDataCount = 0
     var insertedIndexPaths = [[NSIndexPath]]()
     var insertedSections = [NSIndexSet]()
+
+    #if os(tvOS)
+    // tvOS adds padding around UITableViewCells
+    // http://stackoverflow.com/questions/33364236/why-is-there-a-space-between-the-cells-in-my-uitableview
+    let itemSpacing: CGFloat = 14
+    let itemWidthInset: CGFloat = 16
+    #else
+    let itemSpacing: CGFloat = 0
+    let itemWidthInset: CGFloat = 0
+    #endif
 
     init() {
         let frame = CGRect(x: 0, y: 0, width: 320, height: 1000)
@@ -419,6 +431,9 @@ private class TestCollectionView: LayoutAdapterCollectionView, TestableReloadabl
     var reloadDataCount = 0
     var insertedIndexPaths = [[NSIndexPath]]()
     var insertedSections = [NSIndexSet]()
+
+    let itemSpacing: CGFloat = 0
+    let itemWidthInset: CGFloat = 0
 
     init() {
         let frame = CGRect(x: 0, y: 0, width: 320, height: 1000)
