@@ -51,7 +51,7 @@ public class StackView: UIView {
     public init(axis: Axis,
                 spacing: CGFloat = 0,
                 distribution: StackLayout.Distribution = .leading,
-                contentInsets: UIEdgeInsets = UIEdgeInsetsZero,
+                contentInsets: UIEdgeInsets = UIEdgeInsets.zero,
                 alignment: Alignment = .fill,
                 flexibility: Flexibility? = nil) {
 
@@ -61,7 +61,7 @@ public class StackView: UIView {
         self.contentInsets = contentInsets
         self.alignment = alignment
         self.flexibility = flexibility
-        super.init(frame: CGRectZero)
+        super.init(frame: CGRect.zero)
     }
 
     public required init?(coder aDecoder: NSCoder) {
@@ -74,8 +74,8 @@ public class StackView: UIView {
      Subviews MUST implement sizeThatFits so StackView can allocate space correctly.
      If a subview uses Auto Layout, then the subview can implement sizeThatFits by calling systemLayoutSizeFittingSize.
      */
-    public func addArrangedSubviews(subviews: [UIView]) {
-        arrangedSubviews.appendContentsOf(subviews)
+    public func addArrangedSubviews(_ subviews: [UIView]) {
+        arrangedSubviews.append(contentsOf: subviews)
         for subview in subviews {
             addSubview(subview)
         }
@@ -83,16 +83,16 @@ public class StackView: UIView {
         setNeedsLayout()
     }
 
-    public override func sizeThatFits(size: CGSize) -> CGSize {
+    public override func sizeThatFits(_ size: CGSize) -> CGSize {
         return stackLayout.measurement(within: size).size
     }
 
-    public override func intrinsicContentSize() -> CGSize {
-        return sizeThatFits(CGSize(width: CGFloat.max, height: CGFloat.max))
+    public override var intrinsicContentSize: CGSize {
+        return sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude))
     }
 
     public override func layoutSubviews() {
-        stackLayout.measurement(within: bounds.size).arrangement(within: bounds).makeViews(in: self)
+        stackLayout.measurement(within: bounds.size).arrangement(within: bounds).makeViews(inView: self)
     }
 
     private var stackLayout: Layout {
@@ -116,7 +116,6 @@ public class StackView: UIView {
 private struct ViewLayout: Layout {
 
     let view: UIView
-    let viewReuseId: String? = nil
 
     func measurement(within maxSize: CGSize) -> LayoutMeasurement {
         let size = view.sizeThatFits(maxSize)
@@ -127,19 +126,18 @@ private struct ViewLayout: Layout {
         return LayoutArrangement(layout: self, frame: rect, sublayouts: [])
     }
 
-    func makeView(from recycler: ViewRecycler, configure: Bool) -> UIView? {
-        recycler.markViewAsRecycled(view)
+    func makeView() -> UIView? {
         return view
     }
 
     var flexibility: Flexibility {
-        let horizontal = flexForAxis(.Horizontal)
-        let vertical = flexForAxis(.Vertical)
+        let horizontal = flexForAxis(.horizontal)
+        let vertical = flexForAxis(.vertical)
         return Flexibility(horizontal: horizontal, vertical: vertical)
     }
 
-    private func flexForAxis(axis: UILayoutConstraintAxis) -> Flexibility.Flex {
-        switch view.contentHuggingPriorityForAxis(.Horizontal) {
+    private func flexForAxis(_ axis: UILayoutConstraintAxis) -> Flexibility.Flex {
+        switch view.contentHuggingPriority(for: .horizontal) {
         case UILayoutPriorityRequired:
             return nil
         case let priority:

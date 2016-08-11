@@ -6,10 +6,10 @@
 // software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import CoreGraphics
+import UIKit
 
 /**
- Specifies how a layout positions itself inside of the rect that it is given to it by its parent during arrangement.
+ Specifies how a layout positions itself inside of the rect that it is given to it by its parent during the positioning pass.
  */
 public struct Alignment {
 
@@ -43,7 +43,7 @@ public struct Alignment {
         } else {
             scaledSize = CGSize(width: rect.size.width, height: rect.size.width / sizeRatio)
         }
-        return Alignment.center.position(size: scaledSize, in: rect)
+        return Alignment.center.position(scaledSize, inRect: rect)
     })
 
     /// Alignment behavior along the vertical dimension.
@@ -61,7 +61,7 @@ public struct Alignment {
         /// The layout's height is set to be equal to the available height.
         case fill
 
-        public func align(length length: CGFloat, availableLength: CGFloat, offset: CGFloat) -> (offset: CGFloat, length: CGFloat) {
+        public func align(_ length: CGFloat, availableLength: CGFloat, offset: CGFloat) -> (offset: CGFloat, length: CGFloat) {
             // To avoid implementing the math twice, we just convert to a horizontal alignment and call its apply method.
             let horizontal: Horizontal
             switch self {
@@ -74,7 +74,7 @@ public struct Alignment {
             case .fill:
                 horizontal = .fill
             }
-            return horizontal.align(length: length, availableLength: availableLength, offset: offset)
+            return horizontal.align(length, availableLength: availableLength, offset: offset)
         }
     }
 
@@ -93,7 +93,7 @@ public struct Alignment {
         /// The layout's width is set to be equal to the available width.
         case fill
 
-        public func align(length length: CGFloat, availableLength: CGFloat, offset: CGFloat) -> (offset: CGFloat, length: CGFloat) {
+        public func align(_ length: CGFloat, availableLength: CGFloat, offset: CGFloat) -> (offset: CGFloat, length: CGFloat) {
             let excessLength = availableLength - length
             let clampedLength = min(availableLength, length)
             let alignedLength: CGFloat
@@ -127,14 +127,14 @@ public struct Alignment {
     
     public init(vertical: Vertical, horizontal: Horizontal) {
         self.aligner = { (size: CGSize, rect: CGRect) -> CGRect in
-            let (x, width) = horizontal.align(length: size.width, availableLength: rect.width, offset: rect.origin.x)
-            let (y, height) = vertical.align(length: size.height, availableLength: rect.height, offset: rect.origin.y)
+            let (x, width) = horizontal.align(size.width, availableLength: rect.width, offset: rect.origin.x)
+            let (y, height) = vertical.align(size.height, availableLength: rect.height, offset: rect.origin.y)
             return CGRect(x: x, y: y, width: width, height: height)
         }
     }
 
     /// Positions a rect of the given size inside the given rect using the alignment spec.
-    public func position(size size: CGSize, in rect: CGRect) -> CGRect {
+    public func position(_ size: CGSize, inRect rect: CGRect) -> CGRect {
         return aligner(size: size, rect: rect)
     }
 }

@@ -27,27 +27,45 @@ public protocol ReloadableView: class {
     var decelerating: Bool { get }
 
     /**
+     The axis which is scrollable.
+     */
+    func scrollAxis() -> Axis
+
+    /**
      Reloads the data synchronously.
      This means that it must be safe to immediately call other operations such as `insert`.
      */
     func reloadDataSync()
 
-    /// Registers views for the reuse identifier.
-    func registerViews(reuseIdentifier reuseIdentifier: String)
 
     /**
-     Performs a set of updates in a batch.
-     
-     The reloadable view must follow the same semantics for handling the index paths
-     of concurrent inserts/updates/deletes as UICollectionView documents in `performBatchUpdates`.
+     Registers views for the reuse identifier.
      */
-    func perform(batchUpdates batchUpdates: BatchUpdates)
+    func registerViews(_ reuseIdentifier: String)
+
+    /// Inserts sections into the reloadable view.
+    func insert(sections: IndexSet)
+
+    /// Inserts index paths into the reloadable view.
+    func insert(_ indexPaths: [IndexPath])
 }
 
 // MARK: - UICollectionView
 
 /// Make UICollectionView conform to ReloadableView protocol.
 extension UICollectionView: ReloadableView {
+    
+    public func scrollAxis() -> Axis {
+        if let flowLayout = collectionViewLayout as? UICollectionViewFlowLayout {
+            switch flowLayout.scrollDirection {
+            case .vertical:
+                return .vertical
+            case .horizontal:
+                return .horizontal
+            }
+        }
+        return .vertical
+    }
 
     public func reloadDataSync() {
         reloadData()
@@ -56,34 +74,18 @@ extension UICollectionView: ReloadableView {
         layoutIfNeeded()
     }
 
-    public func registerViews(reuseIdentifier reuseIdentifier: String) {
-        registerClass(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-        registerClass(UICollectionReusableView.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: reuseIdentifier)
-        registerClass(UICollectionReusableView.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: reuseIdentifier)
+    public func registerViews(_ reuseIdentifier: String) {
+        register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+        register(UICollectionReusableView.self, forSupplementaryViewOfKind: UICollectionElementKindSectionHeader, withReuseIdentifier: reuseIdentifier)
+        register(UICollectionReusableView.self, forSupplementaryViewOfKind: UICollectionElementKindSectionFooter, withReuseIdentifier: reuseIdentifier)
     }
 
-    public func perform(batchUpdates batchUpdates: BatchUpdates) {
-        performBatchUpdates({
-            if batchUpdates.insertItems.count > 0 {
-                self.insertItemsAtIndexPaths(batchUpdates.insertItems)
-            }
-            if batchUpdates.deleteItems.count > 0 {
-                self.deleteItemsAtIndexPaths(batchUpdates.deleteItems)
-            }
-            for move in batchUpdates.moveItems {
-                self.moveItemAtIndexPath(move.from, toIndexPath: move.to)
-            }
+    public func insert(_ indexPaths: [IndexPath]) {
+        insertItems(at: indexPaths)
+    }
 
-            if batchUpdates.insertSections.count > 0 {
-                self.insertSections(batchUpdates.insertSections)
-            }
-            if batchUpdates.deleteSections.count > 0 {
-                self.deleteSections(batchUpdates.deleteSections)
-            }
-            for move in batchUpdates.moveSections {
-                self.moveSection(move.from, toSection: move.to)
-            }
-        }, completion: nil)
+    public func insert(sections: IndexSet) {
+        insertSections(sections)
     }
 }
 
@@ -92,40 +94,24 @@ extension UICollectionView: ReloadableView {
 /// Make UITableView conform to ReloadableView protocol.
 extension UITableView: ReloadableView {
 
+    public func scrollAxis() -> Axis {
+        return .vertical
+    }
+
     public func reloadDataSync() {
         reloadData()
     }
 
-    public func registerViews(reuseIdentifier reuseIdentifier: String) {
-        registerClass(UITableViewCell.self, forCellReuseIdentifier: reuseIdentifier)
-        registerClass(UITableViewHeaderFooterView.self, forHeaderFooterViewReuseIdentifier: reuseIdentifier)
+    public func registerViews(_ reuseIdentifier: String) {
+        register(UITableViewCell.self, forCellReuseIdentifier: reuseIdentifier)
+        register(UITableViewHeaderFooterView.self, forHeaderFooterViewReuseIdentifier: reuseIdentifier)
     }
 
-    public func perform(batchUpdates batchUpdates: BatchUpdates) {
-        beginUpdates()
+    public func insert(sections: IndexSet) {
+        insertSections(sections, with: .none)
+    }
 
-        // Update items.
-        if batchUpdates.insertItems.count > 0 {
-            insertRowsAtIndexPaths(batchUpdates.insertItems, withRowAnimation: .Automatic)
-        }
-        if batchUpdates.deleteItems.count > 0 {
-            deleteRowsAtIndexPaths(batchUpdates.deleteItems, withRowAnimation: .Automatic)
-        }
-        for move in batchUpdates.moveItems {
-            moveRowAtIndexPath(move.from, toIndexPath: move.to)
-        }
-
-        // Update sections.
-        if batchUpdates.insertSections.count > 0 {
-            insertSections(batchUpdates.insertSections, withRowAnimation: .Automatic)
-        }
-        if batchUpdates.deleteSections.count > 0 {
-            deleteSections(batchUpdates.deleteSections, withRowAnimation: .Automatic)
-        }
-        for move in batchUpdates.moveSections {
-            moveSection(move.from, toSection: move.to)
-        }
-
-        endUpdates()
+    public func insert(_ indexPaths: [IndexPath]) {
+        insertRows(at: indexPaths, with: .none)
     }
 }

@@ -6,7 +6,7 @@
 // software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import CoreGraphics
+import UIKit
 
 /**
  The size of a layout and the sizes of its sublayouts.

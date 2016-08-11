@@ -13,22 +13,20 @@ import LayoutKit
  A layout for a collection view that has fixed width cells.
  The height of the collection view is the height of the tallest cell.
  */
-public class FixedWidthCellCollectionViewLayout<V: LayoutAdapterCollectionView, C: CollectionType where C.Generator.Element == Layout>: Layout {
+public class FixedWidthCellCollectionViewLayout<V: LayoutAdapterCollectionView, C: Collection where C.Iterator.Element == Layout>: Layout {
 
     private let cellWidth: CGFloat
     private let sectionLayouts: [Section<C>]
-    private let config: (V -> Void)?
-    public let viewReuseId: String?
+    private let config: ((V) -> Void)?
 
     public var flexibility: Flexibility {
         // Horizontally flexible because that is our scroll direction. It is ok if our viewport is smaller/larger than our content.
         return Flexibility(horizontal: Flexibility.defaultFlex, vertical: nil)
     }
 
-    public init(cellWidth: CGFloat, sectionLayouts: [Section<C>], viewReuseId: String? = nil, config: (V -> Void)? = nil) {
+    public init(cellWidth: CGFloat, sectionLayouts: [Section<C>], config: ((V) -> Void)? = nil) {
         self.cellWidth = cellWidth
         self.sectionLayouts = sectionLayouts
-        self.viewReuseId = viewReuseId
         self.config = config
     }
 
@@ -36,7 +34,7 @@ public class FixedWidthCellCollectionViewLayout<V: LayoutAdapterCollectionView, 
     private lazy var sectionMeasurements: [Section<[LayoutMeasurement]>] = {
         return self.sectionLayouts.map { sectionLayout in
             return sectionLayout.map({ (layout: Layout) -> LayoutMeasurement in
-                return layout.measurement(within: CGSize(width: self.cellWidth, height: CGFloat.max))
+                return layout.measurement(within: CGSize(width: self.cellWidth, height: CGFloat.greatestFiniteMagnitude))
             })
         }
     }()
@@ -46,7 +44,7 @@ public class FixedWidthCellCollectionViewLayout<V: LayoutAdapterCollectionView, 
         let maxHeight = sectionMeasurements.reduce(0) { (maxHeight, measuredSection) -> CGFloat in
             let headerHeight = measuredSection.header?.size.height ?? 0
             let footerHeight = measuredSection.footer?.size.height ?? 0
-            let maxItemHeight = measuredSection.items.map({ $0.size.height }).reduce(0, combine: max)
+            let maxItemHeight = measuredSection.items.map({ $0.size.height }).reduce(0, max)
             return max(maxHeight, headerHeight, maxItemHeight, footerHeight)
         }
 
@@ -65,17 +63,15 @@ public class FixedWidthCellCollectionViewLayout<V: LayoutAdapterCollectionView, 
             })
         })
 
-        let frame = Alignment.fill.position(size: measurement.size, in: rect)
+        let frame = Alignment.fill.position(measurement.size, inRect: rect)
         return LayoutArrangement(layout: self, frame: frame, sublayouts: [])
     }
 
-    public func makeView(from recycler: ViewRecycler, configure: Bool) -> UIView? {
-        let collectionView: V = recycler.makeView(viewReuseId: viewReuseId)
-        if configure {
-            config?(collectionView)
-            if let sectionArrangements = sectionArrangements {
-                collectionView.layoutAdapter.reload(arrangement: sectionArrangements)
-            }
+    public func makeView() -> UIView? {
+        let collectionView = V()
+        config?(collectionView)
+        if let sectionArrangements = sectionArrangements {
+            collectionView.layoutAdapter.reload(sectionArrangements)
         }
         return collectionView
     }

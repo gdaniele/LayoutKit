@@ -18,14 +18,14 @@ public class CircleImagePileLayout: StackLayout {
 
     public let mode: Mode
 
-    init(imageNames: [String], mode: Mode = .trailingOnTop, viewReuseId: String? = nil) {
+    init(imageNames: [String], mode: Mode = .trailingOnTop) {
         self.mode = mode
         let sublayouts: [Layout] = imageNames.map { imageName in
             return SizeLayout<UIImageView>(width: 50, height: 50, config: { imageView in
                 imageView.image = UIImage(named: imageName)
                 imageView.layer.cornerRadius = 25
                 imageView.layer.masksToBounds = true
-                imageView.layer.borderColor = UIColor.whiteColor().CGColor
+                imageView.layer.borderColor = UIColor.white.cgColor
                 imageView.layer.borderWidth = 2
             })
         }
@@ -33,24 +33,17 @@ public class CircleImagePileLayout: StackLayout {
                    spacing: -25,
                    distribution: .leading,
                    flexibility: .inflexible,
-                   viewReuseId: viewReuseId,
                    sublayouts: sublayouts)
     }
 
-    public override func makeView(from recycler: ViewRecycler, configure: Bool) -> UIView? {
-        switch mode {
-        case .leadingOnTop:
-            let view: CircleImagePileView = recycler.makeView(viewReuseId: viewReuseId)
-            return view
-        case .trailingOnTop:
-            return nil
-        }
+    public override func makeView() -> UIView? {
+        return mode == .leadingOnTop ? CircleImagePileView() : nil
     }
 }
 
 private class CircleImagePileView: UIView {
 
-    private override func addSubview(view: UIView) {
+    private override func addSubview(_ view: UIView) {
         // Make sure views are inserted below existing views so that the first image in the face pile is on top.
         if let lastSubview = subviews.last {
             insertSubview(view, belowSubview: lastSubview)

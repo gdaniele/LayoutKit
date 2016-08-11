@@ -6,7 +6,7 @@
 // software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import CoreGraphics
+import UIKit
 
 /**
  A layout that measures to a predetermined size.
@@ -24,10 +24,12 @@ import CoreGraphics
  SizeLayout<UIView>(height: 50, sublayout: LabelLayout(text: "Hello"))
  ```
 */
-public class SizeLayout<V: View>: BaseLayout<V>, Layout {
+public class SizeLayout<View: UIView>: PositioningLayout<View>, Layout {
 
     public let width: CGFloat?
     public let height: CGFloat?
+    public let alignment: Alignment
+    public let flexibility: Flexibility
     public let sublayout: Layout?
 
     /**
@@ -46,24 +48,23 @@ public class SizeLayout<V: View>: BaseLayout<V>, Layout {
                 height: CGFloat? = nil,
                 alignment: Alignment? = nil,
                 flexibility: Flexibility? = nil,
-                viewReuseId: String? = nil,
                 sublayout: Layout? = nil,
-                config: (V -> Void)? = nil) {
+                config: ((View) -> Void)? = nil) {
 
         self.width = width
         self.height = height
+        self.alignment = alignment ?? SizeLayout.defaultAlignment(width, height: height)
+        self.flexibility = flexibility ?? SizeLayout.defaultFlexibility(width, height: height)
         self.sublayout = sublayout
-        let alignment = alignment ?? SizeLayout.defaultAlignment(width: width, height: height)
-        let flexibility = flexibility ?? SizeLayout.defaultFlexibility(width: width, height: height)
-        super.init(alignment: alignment, flexibility: flexibility, viewReuseId: viewReuseId, config: config)
+        super.init(config: config)
     }
 
-    private static func defaultAlignment(width width: CGFloat?, height: CGFloat?) -> Alignment {
+    private static func defaultAlignment(_ width: CGFloat?, height: CGFloat?) -> Alignment {
         return Alignment(vertical: height == nil ? .fill : .center,
                          horizontal: width == nil ? .fill : .center)
     }
 
-    private static func defaultFlexibility(width width: CGFloat?, height: CGFloat?) -> Flexibility {
+    private static func defaultFlexibility(_ width: CGFloat?, height: CGFloat?) -> Flexibility {
         return Flexibility(horizontal: width == nil ? Flexibility.defaultFlex : Flexibility.inflexibleFlex,
                            vertical: height == nil ? Flexibility.defaultFlex : Flexibility.inflexibleFlex)
     }
@@ -75,26 +76,24 @@ public class SizeLayout<V: View>: BaseLayout<V>, Layout {
     public convenience init(size: CGSize,
                 alignment: Alignment? = nil,
                 flexibility: Flexibility? = nil,
-                viewReuseId: String? = nil,
                 sublayout: Layout? = nil,
-                config: (V -> Void)? = nil) {
+                config: ((View) -> Void)? = nil) {
 
         self.init(width: size.width,
                   height: size.height,
                   alignment: alignment,
                   flexibility: flexibility,
-                  viewReuseId: viewReuseId,
                   sublayout: sublayout,
                   config: config)
     }
 
     public func measurement(within maxSize: CGSize) -> LayoutMeasurement {
-        let size = CGSize(width: width ?? .max, height: height ?? .max)
+        let size = CGSize(width: width ?? .greatestFiniteMagnitude, height: height ?? .greatestFiniteMagnitude)
         var constrainedSize = size.sizeDecreasedToSize(maxSize)
 
         // If at least one dimension is nil, then we need to measure the sublayout to inherit its value (zero if there is no sublayout).
         if width == nil || height == nil {
-            let subsize = sublayout?.measurement(within: constrainedSize).size ?? CGSizeZero
+            let subsize = sublayout?.measurement(within: constrainedSize).size ?? CGSize.zero
             if width == nil {
                 constrainedSize.width = subsize.width
             }
@@ -107,7 +106,7 @@ public class SizeLayout<V: View>: BaseLayout<V>, Layout {
     }
 
     public func arrangement(within rect: CGRect, measurement: LayoutMeasurement) -> LayoutArrangement {
-        let frame = alignment.position(size: measurement.size, in: rect)
+        let frame = alignment.position(measurement.size, inRect: rect)
         let sublayouts = sublayout.map { layout in
             return [layout.arrangement(width: frame.size.width, height: frame.size.height)]
         }

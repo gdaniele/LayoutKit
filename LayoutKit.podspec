@@ -1,19 +1,13 @@
 Pod::Spec.new do |spec|
   spec.name             = 'LayoutKit'
-  spec.version          = '1.1.0'
+  spec.version          = '1.1.0-swift3'
   spec.license          = { :type => 'Apache License, Version 2.0' }
-  spec.homepage         = 'http://layoutkit.org'
+  spec.homepage         = 'https://linkedin.github.io/LayoutKit'
   spec.authors          = 'LinkedIn'
   spec.summary          = 'LayoutKit is a fast view layout library for iOS.'
-  spec.source           = { :git => 'https://github.com/linkedin/LayoutKit.git', :tag => spec.version }
+  spec.source           = { :git => 'https://github.com/linkedin/LayoutKit.git', :branch => 'swift3' }
   spec.source_files     = 'LayoutKit/**/*.swift'
-
-  spec.ios.deployment_target = '8.0'
-  spec.ios.frameworks        = 'Foundation', 'CoreGraphics', 'UIKit'
-  spec.ios.exclude_files     = 'LayoutKit/AppKitSupport.swift'
-
-  spec.osx.deployment_target = '10.9'
-  spec.osx.frameworks        = 'Foundation', 'CoreGraphics', 'AppKit'
-  spec.osx.exclude_files     = 'LayoutKit/UIKitSupport.swift', 'LayoutKit/Layouts/LabelLayout.Swift', 'LayoutKit/Views/**'
+  spec.platform         = :ios, '8.0'
+  spec.frameworks       = 'Foundation', 'UIKit'
 end
 

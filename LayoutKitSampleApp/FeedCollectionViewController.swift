@@ -19,26 +19,26 @@ class FeedCollectionViewController: FeedBaseViewController {
         super.viewDidLoad()
 
         collectionView = UICollectionView(frame: view.bounds, collectionViewLayout: UICollectionViewFlowLayout())
-        collectionView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-        collectionView.backgroundColor = UIColor.purpleColor()
+        collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        collectionView.backgroundColor = UIColor.purple
 
         reloadableViewLayoutAdapter = ReloadableViewLayoutAdapter(reloadableView: collectionView)
         collectionView.dataSource = reloadableViewLayoutAdapter
         collectionView.delegate = reloadableViewLayoutAdapter
 
         view.addSubview(collectionView)
-        self.layoutFeed(width: collectionView.frame.width, synchronous: false)
+        self.layoutFeed(collectionView.frame.width, synchronous: false)
     }
 
-    private func layoutFeed(width width: CGFloat, synchronous: Bool) {
-        reloadableViewLayoutAdapter.reload(width: width, synchronous: synchronous, layoutProvider: { [weak self] in
+    private func layoutFeed(_ width: CGFloat, synchronous: Bool) {
+        reloadableViewLayoutAdapter.reload(width, synchronous: synchronous, layoutProvider: { [weak self] in
             return [Section(header: nil, items: self?.getFeedItems() ?? [], footer: nil)]
         })
     }
 
-    override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
-        layoutFeed(width: size.width, synchronous: true)
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        layoutFeed(size.width, synchronous: true)
     }
 }
 

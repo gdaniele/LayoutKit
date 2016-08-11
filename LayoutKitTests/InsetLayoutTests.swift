@@ -11,10 +11,9 @@ import LayoutKit
 
 class InsetLayoutTests: XCTestCase {
 
-    #if os(iOS)
     func testInsetLabel() {
         let insetLabel = InsetLayout(
-            insets: EdgeInsets(top: 2, left: 4, bottom: 8, right: 16),
+            insets: UIEdgeInsets(top: 2, left: 4, bottom: 8, right: 16),
             sublayout: LabelLayout(text: "Hi", font: UIFont.helvetica())
         )
         let arrangement = insetLabel.arrangement()
@@ -27,24 +26,28 @@ class InsetLayoutTests: XCTestCase {
             3.0:  CGRect(x: 4, y: 2, width: 16+oneThird, height: 20-oneThird),
         ])
     }
-    #endif
 
     func testInsetConvenience() {
-        let insetLayout = InsetLayout(
+        let insetLabel = InsetLayout(
             inset: 2,
-            sublayout: SizeLayout<View>(width: 10, height: 10)
+            sublayout: LabelLayout(text: "Hi", font: UIFont.helvetica())
         )
-
-        let arrangement = insetLayout.arrangement()
-        XCTAssertEqual(arrangement.frame, CGRect(x: 0, y: 0, width: 14, height: 14))
-        XCTAssertEqual(arrangement.sublayouts.first!.frame, CGRect(x: 2, y: 2, width: 10, height: 10))
+        let arrangement = insetLabel.arrangement()
+        AssertEqualDensity(arrangement.frame, [
+            2.0: CGRect(x: 0, y: 0, width: 2+16.5+2, height: 2+20+2),
+            3.0: CGRect(x: 0, y: 0, width: 2+16+oneThird+2, height: 2+20-oneThird+2),
+            ])
+        AssertEqualDensity(arrangement.sublayouts.first!.frame, [
+            2.0:  CGRect(x: 2, y: 2, width: 16.5, height: 20),
+            3.0:  CGRect(x: 2, y: 2, width: 16+oneThird, height: 20-oneThird),
+            ])
     }
 
     func testConfig() {
         var configCount = 0
         let insetLayout = InsetLayout(
-            insets: EdgeInsets(top: 2, left: 4, bottom: 8, right: 16),
-            sublayout: SizeLayout<View>(width: 10, height: 10),
+            insets: UIEdgeInsets(top: 2, left: 4, bottom: 8, right: 16),
+            sublayout: LabelLayout(text: "Hi", font: UIFont.helvetica()),
             config: { view in
                 configCount += 1
             }

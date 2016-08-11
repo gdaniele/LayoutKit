@@ -14,8 +14,8 @@ class ForegroundMiniProfileViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = UIColor.whiteColor()
-        edgesForExtendedLayout = .None
+        view.backgroundColor = UIColor.white
+        edgesForExtendedLayout = UIRectEdge()
         
         let nickProfile = MiniProfileLayout(
             imageName: "nick.jpg",
@@ -23,6 +23,6 @@ class ForegroundMiniProfileViewController: UIViewController {
             headline: "Software Engineer at LinkedIn"
         )
 
-        nickProfile.arrangement(width: view.bounds.width).makeViews(in: view)
+        nickProfile.arrangement(width: view.bounds.width).makeViews(inView: view)
     }
 }

@@ -1,10 +1,9 @@
-# [![LayoutKit](https://cdn.rawgit.com/linkedin/LayoutKit/master/docs/img/layoutkit.svg)](http://layoutkit.org/)
+# [![LayoutKit](http://layoutkit.org/img/layoutkit.svg)](http://layoutkit.org/)
 
 [![Build Status](https://travis-ci.org/linkedin/LayoutKit.svg?branch=master)](https://travis-ci.org/linkedin/LayoutKit)
 [![codecov](https://codecov.io/gh/linkedin/LayoutKit/branch/master/graph/badge.svg)](https://codecov.io/gh/linkedin/LayoutKit)
-[![CocoaPods](https://img.shields.io/cocoapods/metrics/doc-percent/LayoutKit.svg?maxAge=86400)](http://cocoadocs.org/docsets/LayoutKit)
-[![GitHub release](https://img.shields.io/github/release/linkedin/layoutkit.svg?maxAge=86400)](https://github.com/linkedin/LayoutKit/releases)
-[![CocoaPods](https://img.shields.io/cocoapods/p/LayoutKit.svg?maxAge=86400)](#)
+[![GitHub release](https://img.shields.io/github/release/linkedin/layoutkit.svg?maxAge=2592000)]()
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 
 LayoutKit is a fast view layout library for iOS.
 
@@ -47,10 +46,10 @@ let stack = StackLayout(
 
 let insets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 8)
 let helloWorld = InsetLayout(insets: insets, layout: stack)
-helloWorld.arrangement().makeViews(in: rootView)
+helloWorld.arrangement().makeViews(inView: rootView)
 ```
 
-![Hello world example layout](docs/img/helloworld.png)
+![Hello world example layout](http://layoutkit.org/img/helloworld.png)
 
 ## Limitations
 
@@ -61,7 +60,7 @@ We have found LayoutKit to be a useful tool, but you should be aware of what it 
 
 ## Installation
 
-LayoutKit can be installed with [CocoaPods](https://cocoapods.org/) or [Carthage](https://github.com/Carthage/Carthage).
+LayoutKit can be installed with [Cocoapods](https://cocoapods.org/) or [Carthage](https://github.com/Carthage/Carthage).
 
 ### CocoaPods
 

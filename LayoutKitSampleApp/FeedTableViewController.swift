@@ -18,26 +18,26 @@ class FeedTableViewController: FeedBaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        tableView = UITableView(frame: view.bounds, style: .Grouped)
-        tableView.autoresizingMask = [.FlexibleWidth, .FlexibleHeight]
-        tableView.backgroundColor = UIColor.purpleColor()
+        tableView = UITableView(frame: view.bounds, style: .grouped)
+        tableView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        tableView.backgroundColor = UIColor.purple
 
         reloadableViewLayoutAdapter = ReloadableViewLayoutAdapter(reloadableView: tableView)
         tableView.dataSource = reloadableViewLayoutAdapter
         tableView.delegate = reloadableViewLayoutAdapter
 
         view.addSubview(tableView)
-        self.layoutFeed(width: tableView.frame.width, synchronous: false)
+        self.layoutFeed(tableView.frame.width, synchronous: false)
     }
 
-    private func layoutFeed(width width: CGFloat, synchronous: Bool) {
-        reloadableViewLayoutAdapter.reload(width: width, synchronous: synchronous, layoutProvider: { [weak self] in
+    private func layoutFeed(_ width: CGFloat, synchronous: Bool) {
+        reloadableViewLayoutAdapter.reload(width, synchronous: synchronous, layoutProvider: { [weak self] in
             return [Section(header: nil, items: self?.getFeedItems() ?? [], footer: nil)]
         })
     }
 
-    override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        super.viewWillTransitionToSize(size, withTransitionCoordinator: coordinator)
-        layoutFeed(width: size.width, synchronous: true)
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        layoutFeed(size.width, synchronous: true)
     }
 }

@@ -6,7 +6,7 @@
 // software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import CoreGraphics
+import UIKit
 import LayoutKit
 
 class TestStack {
@@ -14,10 +14,10 @@ class TestStack {
     let intrinsicSize: CGSize
 
     var stackLayout: StackLayout! = nil
-    var stackView: View! = nil
-    var oneView: View! = nil
-    var twoView: View! = nil
-    var threeView: View! = nil
+    var stackView: UIView! = nil
+    var oneView: UIView! = nil
+    var twoView: UIView! = nil
+    var threeView: UIView! = nil
 
     init(axis: Axis, distribution: StackLayout.Distribution, spacing: CGFloat = 0, alignment: Alignment = .fill) {
 
@@ -34,13 +34,13 @@ class TestStack {
             distribution: distribution,
             alignment: alignment,
             sublayouts: [
-                SizeLayout<View>(width: 7, height: 14, alignment: .fill, flexibility: .flexible, config: { view in
+                SizeLayout<UIView>(width: 7, height: 14, alignment: .fill, flexibility: .flexible, config: { view in
                     self.oneView = view
                 }),
-                SizeLayout<View>(width: 18, height: 18.5, alignment: .fill, flexibility: .flexible, config: { view in
+                SizeLayout<UIView>(width: 18, height: 18.5, alignment: .fill, flexibility: .flexible, config: { view in
                     self.twoView = view
                 }),
-                SizeLayout<View>(width: 33.5, height: 23, alignment: .fill, flexibility: .flexible, config: { view in
+                SizeLayout<UIView>(width: 33.5, height: 23, alignment: .fill, flexibility: .flexible, config: { view in
                     self.threeView = view
                 }),
             ],
@@ -50,7 +50,7 @@ class TestStack {
         )
     }
 
-    func arrangement(excessWidth excessWidth: CGFloat? = nil, excessHeight: CGFloat? = nil) -> TestStack {
+    func arrangement(excessWidth: CGFloat? = nil, excessHeight: CGFloat? = nil) -> TestStack {
         // width/height default to nil to match what real callers would do.
         // defaulting to 0 would be less code but real callers are unlikely to explicitly provide both width and height.
         var width: CGFloat? = nil

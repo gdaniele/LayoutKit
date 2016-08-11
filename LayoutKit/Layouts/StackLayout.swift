@@ -6,7 +6,7 @@
 // software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import CoreGraphics
+import UIKit
 
 /**
  A layout that stacks sublayouts along an axis.
@@ -16,7 +16,7 @@ import CoreGraphics
  If this not enough space along the axis for all sublayouts then layouts with the highest flexibility are removed
  until there is enough space to posistion the remaining layouts.
  */
-public class StackLayout: BaseLayout<View> {
+public class StackLayout: PositioningLayout<UIView> {
 
     /// The axis along which sublayouts are stacked.
     public let axis: Axis
@@ -29,6 +29,12 @@ public class StackLayout: BaseLayout<View> {
 
     /// The distribution of space along the stack's axis.
     public let distribution: Distribution
+
+    /// The stack's alignment inside its parent.
+    public let alignment: Alignment
+
+    /// The stack's flexibility.
+    public let flexibility: Flexibility
     
     /// The stacked layouts.
     public let sublayouts: [Layout]
@@ -38,16 +44,16 @@ public class StackLayout: BaseLayout<View> {
                 distribution: Distribution = .fillFlexing,
                 alignment: Alignment = .fill,
                 flexibility: Flexibility? = nil,
-                viewReuseId: String? = nil,
                 sublayouts: [Layout],
-                config: (View -> Void)? = nil) {
+                config: ((UIView) -> Void)? = nil) {
         
         self.axis = axis
         self.spacing = spacing
         self.distribution = distribution
+        self.alignment = alignment
+        self.flexibility = flexibility ?? StackLayout.defaultFlexibility(axis, sublayouts: sublayouts)
         self.sublayouts = sublayouts
-        let flexibility = flexibility ?? StackLayout.defaultFlexibility(axis: axis, sublayouts: sublayouts)
-        super.init(alignment: alignment, flexibility: flexibility, viewReuseId: viewReuseId, config: config)
+        super.init(config: config)
     }
 }
 
@@ -57,13 +63,13 @@ extension StackLayout: Layout {
 
     public func measurement(within maxSize: CGSize) -> LayoutMeasurement {
         var availableSize = AxisSize(axis: axis, size: maxSize)
-        var sublayoutMeasurements = [LayoutMeasurement?](count: sublayouts.count, repeatedValue: nil)
-        var usedSize = AxisSize(axis: axis, size: CGSizeZero)
+        var sublayoutMeasurements = [LayoutMeasurement?](repeating: nil, count: sublayouts.count)
+        var usedSize = AxisSize(axis: axis, size: CGSize.zero)
 
         let sublayoutLengthForEqualSizeDistribution: CGFloat?
         if distribution == .fillEqualSize {
             sublayoutLengthForEqualSizeDistribution = sublayoutSpaceForEqualSizeDistribution(
-                totalAvailableSpace: availableSize.axisLength, sublayoutCount: sublayouts.count)
+                availableSize.axisLength, sublayoutCount: sublayouts.count)
         } else {
             sublayoutLengthForEqualSizeDistribution = nil
         }
@@ -102,7 +108,7 @@ extension StackLayout: Layout {
         let nonNilMeasuredSublayouts = sublayoutMeasurements.flatMap { $0 }
 
         if distribution == .fillEqualSize && !nonNilMeasuredSublayouts.isEmpty {
-            let maxAxisLength = nonNilMeasuredSublayouts.map({ AxisSize(axis: axis, size: $0.size).axisLength }).maxElement() ?? 0
+            let maxAxisLength = nonNilMeasuredSublayouts.map({ AxisSize(axis: axis, size: $0.size).axisLength }).max() ?? 0
             usedSize.axisLength = (maxAxisLength + spacing) * CGFloat(nonNilMeasuredSublayouts.count) - spacing
         }
 
@@ -110,19 +116,19 @@ extension StackLayout: Layout {
     }
 
     public func arrangement(within rect: CGRect, measurement: LayoutMeasurement) -> LayoutArrangement {
-        let frame = alignment.position(size: measurement.size, in: rect)
+        let frame = alignment.position(measurement.size, inRect: rect)
         let availableSize = AxisSize(axis: axis, size: frame.size)
         let excessAxisLength = availableSize.axisLength - AxisSize(axis: axis, size: measurement.size).axisLength
-        let config = distributionConfig(excessAxisLength: excessAxisLength)
+        let config = distributionConfig(excessAxisLength)
 
         var nextOrigin = AxisPoint(axis: axis, axisOffset: config.initialAxisOffset, crossOffset: 0)
         var sublayoutArrangements = [LayoutArrangement]()
-        for (index, sublayout) in measurement.sublayouts.enumerate() {
+        for (index, sublayout) in measurement.sublayouts.enumerated() {
             var sublayoutAvailableSize = AxisSize(axis: axis, size: sublayout.size)
             sublayoutAvailableSize.crossLength = availableSize.crossLength
             if distribution == .fillEqualSize {
                 sublayoutAvailableSize.axisLength = sublayoutSpaceForEqualSizeDistribution(
-                    totalAvailableSpace: AxisSize(axis: axis, size: frame.size).axisLength,
+                    AxisSize(axis: axis, size: frame.size).axisLength,
                     sublayoutCount: measurement.sublayouts.count)
             } else if config.stretchIndex == index {
                 sublayoutAvailableSize.axisLength += excessAxisLength
@@ -138,7 +144,7 @@ extension StackLayout: Layout {
         return LayoutArrangement(layout: self, frame: frame, sublayouts: sublayoutArrangements)
     }
 
-    private func sublayoutSpaceForEqualSizeDistribution(totalAvailableSpace totalAvailableSpace: CGFloat, sublayoutCount: Int) -> CGFloat {
+    private func sublayoutSpaceForEqualSizeDistribution(_ totalAvailableSpace: CGFloat, sublayoutCount: Int) -> CGFloat {
         guard sublayoutCount > 0 else {
             return totalAvailableSpace
         }
@@ -201,7 +207,7 @@ extension StackLayout {
         let stretchIndex: Int?
     }
 
-    private func distributionConfig(excessAxisLength excessAxisLength: CGFloat) -> DistributionConfig {
+    private func distributionConfig(_ excessAxisLength: CGFloat) -> DistributionConfig {
         let initialAxisOffset: CGFloat
         let axisSpacing: CGFloat
         var stretchIndex: Int? = nil
@@ -239,8 +245,8 @@ extension StackLayout {
     /**
      Returns the sublayouts sorted by flexibility ascending.
      */
-    private func sublayoutsByAxisFlexibilityAscending() -> [(index: Int, element: Layout)] {
-        return sublayouts.enumerate().sort(compareLayoutsByFlexibilityAscending)
+    private func sublayoutsByAxisFlexibilityAscending() -> [(offset: Int, element: Layout)] {
+        return sublayouts.enumerated().sorted(by: compareLayoutsByFlexibilityAscending)
     }
 
     /**
@@ -248,7 +254,7 @@ extension StackLayout {
      It returns nil if there are no flexible sublayouts.
      */
     private func stretchableSublayoutIndex() -> Int? {
-        guard let (index, sublayout) = sublayouts.enumerate().maxElement(compareLayoutsByFlexibilityAscending) else {
+        guard let (index, sublayout) = sublayouts.enumerated().max(by: compareLayoutsByFlexibilityAscending) else {
             return nil
         }
         if sublayout.flexibility.flex(axis) == nil {
@@ -263,11 +269,11 @@ extension StackLayout {
      If two sublayouts have the same flexibility, then sublayout with the higher index is considered more flexible.
      Inflexible layouts are sorted before all flexible layouts.
      */
-    private func compareLayoutsByFlexibilityAscending(left: (index: Int, layout: Layout), right: (index: Int, layout: Layout)) -> Bool {
+    private func compareLayoutsByFlexibilityAscending(_ left: (offset: Int, layout: Layout), _ right: (offset: Int, layout: Layout)) -> Bool {
         let leftFlex = left.layout.flexibility.flex(axis)
         let rightFlex = right.layout.flexibility.flex(axis)
         if leftFlex == rightFlex {
-            return left.index < right.index
+            return left.offset < right.offset
         }
         // nil is less than all integers
         return leftFlex < rightFlex
@@ -276,7 +282,7 @@ extension StackLayout {
     /**
      Inherit the maximum flexibility of sublayouts along the axis and minimum flexibility of sublayouts across the axis.
      */
-    private static func defaultFlexibility(axis axis: Axis, sublayouts: [Layout]) -> Flexibility {
+    private static func defaultFlexibility(_ axis: Axis, sublayouts: [Layout]) -> Flexibility {
         let initial = AxisFlexibility(axis: axis, axisFlex: nil, crossFlex: .max)
         return sublayouts.reduce(initial) { (flexibility: AxisFlexibility, sublayout: Layout) -> AxisFlexibility in
             let subflex = AxisFlexibility(axis: axis, flexibility: sublayout.flexibility)

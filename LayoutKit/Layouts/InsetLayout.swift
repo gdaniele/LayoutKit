@@ -6,33 +6,27 @@
 // software distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
-import CoreGraphics
+import UIKit
 
 /**
  A layout that insets another layout.
- */
-public class InsetLayout: BaseLayout<View>, Layout {
+*/
+public class InsetLayout: PositioningLayout<UIView>, Layout {
     
-    public let insets: EdgeInsets
+    public let insets: UIEdgeInsets
+    public let alignment: Alignment
     public let sublayout: Layout
 
-    public init(insets: EdgeInsets,
-                alignment: Alignment = Alignment.fill,
-                viewReuseId: String? = nil,
-                sublayout: Layout,
-                config: (View -> Void)? = nil) {
+    public init(insets: UIEdgeInsets, alignment: Alignment = Alignment.fill, sublayout: Layout, config: ((UIView) -> Void)? = nil) {
         self.insets = insets
+        self.alignment = alignment
         self.sublayout = sublayout
-        super.init(alignment: alignment, flexibility: sublayout.flexibility, viewReuseId: viewReuseId, config: config)
+        super.init(config: config)
     }
 
-    public convenience init(inset: CGFloat,
-                            alignment: Alignment = Alignment.fill,
-                            viewReuseId: String? = nil,
-                            sublayout: Layout,
-                            config: (View -> Void)? = nil) {
-        let insets = EdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
-        self.init(insets: insets, alignment: alignment, viewReuseId: viewReuseId, sublayout: sublayout, config: config)
+    public convenience init(inset: CGFloat, alignment: Alignment = Alignment.fill, sublayout: Layout, config: ((UIView) -> Void)? = nil) {
+        let insets = UIEdgeInsets(top: inset, left: inset, bottom: inset, right: inset)
+        self.init(insets: insets, alignment: alignment, sublayout: sublayout, config: config)
     }
 
     public func measurement(within maxSize: CGSize) -> LayoutMeasurement {
@@ -43,7 +37,7 @@ public class InsetLayout: BaseLayout<View>, Layout {
     }
 
     public func arrangement(within rect: CGRect, measurement: LayoutMeasurement) -> LayoutArrangement {
-        let frame = alignment.position(size: measurement.size, in: rect)
+        let frame = alignment.position(measurement.size, inRect: rect)
         let insetOrigin = CGPoint(x: insets.left, y: insets.top)
         let insetSize = frame.size.sizeDecreasedByInsets(insets)
         let sublayoutRect = CGRect(origin: insetOrigin, size: insetSize)
@@ -51,5 +45,9 @@ public class InsetLayout: BaseLayout<View>, Layout {
             return measurement.arrangement(within: sublayoutRect)
         }
         return LayoutArrangement(layout: self, frame: frame, sublayouts: sublayouts)
+    }
+
+    public var flexibility: Flexibility {
+        return sublayout.flexibility
     }
 }
